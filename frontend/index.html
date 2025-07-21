@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gantt Chart</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <button id="reenterTimeBtn">
+  Rinserisci orario
+  </button>
+
+  <!-- Popup di selezione orario -->
+<!-- Popup di selezione orario e operatore -->
+  <div id="timePopup" class="modal">
+    <div class="modal-content">
+      <h2>Seleziona l'orario di inizio</h2>
+
+      <label for="popup-start-hour">Orario:</label>
+      <input type="time" id="popup-start-hour" required />
+      <br /><br />
+
+      <label for="popup-operator">Ultimo operatore:</label>
+      <input type="text" id="popup-operator" placeholder="Inserisci nome e cognome" required />
+      <br /><br />
+
+      <button id="popup-generate">Conferma</button>
+    </div>
+  </div>
+
+
+  <!-- Popup Note Task -->
+   <div id="notePopup" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%, -30%); background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.3); z-index:10000;">
+  <h3>Nota per il task</h3>
+  <textarea id="noteInput" rows="4" style="width:100%;"></textarea>
+  <br><br>
+  <button id="saveNoteBtn">Salva</button>
+  <button id = "closeNoteBtn" onclick="closeNotePopup()">Chiudi</button>
+  </div>
+
+
+  
+
+  <!-- Controlli nascosti inizialmente -->
+
+  <div id="container">
+    <div class="svg"></div>
+  </div>
+
+  <!-- Modal per avvisi -->
+  <div id="customModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>⚠️ ATTENZIONE!!</h2>
+      <p id="modalMessage"></p>
+    </div>
+  </div>
+  <div id="tooltip"></div>
+
+
+  <script src="script.js"></script>
+</body>
+</html>

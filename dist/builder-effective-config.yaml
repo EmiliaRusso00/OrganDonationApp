@@ -1,0 +1,25 @@
+directories:
+  output: dist
+  buildResources: assets
+appId: com.tuonome.trapianto
+productName: GanttTrapiantoOrgani
+files:
+  - filter:
+      - backend/**/*
+      - frontend/**/*
+extraResources:
+  - from: backend/data/
+    to: data
+    filter:
+      - '**/*'
+win:
+  target: nsis
+  icon: assets/icon.ico
+nsis:
+  oneClick: false
+  perMachine: true
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: Gantt Trapianto
+electronVersion: 37.2.3

@@ -1,0 +1,56 @@
+{
+  "name": "mia-electron-app",
+  "version": "1.0.0",
+  "description": "App per gestire un Gantt Chart per trapianti",
+  "main": "backend/main.js",
+  "author": "Emilia Russo",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0"
+  },
+  "devDependencies": {
+    "electron": "^37.2.3",
+    "electron-builder": "^26.0.12",
+    "@electron/rebuild": "^4.0.1"
+  },
+  "build": {
+    "appId": "com.tuonome.trapianto",
+    "productName": "GanttTrapiantoOrgani",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "backend/**/*",
+      "frontend/**/*",
+      "!backend/tasks.db"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/tasks.db",
+        "to": "tasks.db"
+      },
+      {
+        "from": "backend/data/",
+        "to": "data",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Gantt Trapianto"
+    }
+  }
+}
