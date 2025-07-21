@@ -11,9 +11,6 @@
   <button id="reenterTimeBtn">
   Rinserisci orario
   </button>
-
-  <!-- Popup di selezione orario -->
-<!-- Popup di selezione orario e operatore -->
   <div id="timePopup" class="modal">
     <div class="modal-content">
       <h2>Seleziona l'orario di inizio</h2>
@@ -30,8 +27,6 @@
     </div>
   </div>
 
-
-  <!-- Popup Note Task -->
    <div id="notePopup" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%, -30%); background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.3); z-index:10000;">
   <h3>Nota per il task</h3>
   <textarea id="noteInput" rows="4" style="width:100%;"></textarea>
@@ -39,17 +34,10 @@
   <button id="saveNoteBtn">Salva</button>
   <button id = "closeNoteBtn" onclick="closeNotePopup()">Chiudi</button>
   </div>
-
-
-  
-
-  <!-- Controlli nascosti inizialmente -->
-
   <div id="container">
     <div class="svg"></div>
   </div>
 
-  <!-- Modal per avvisi -->
   <div id="customModal" class="modal hidden">
     <div class="modal-content">
       <span class="close-button">&times;</span>

@@ -127,6 +127,11 @@ svg {
   font-weight: 900;
 }
 
+#tooltip .task-note {
+  color: #f96f9d;  /* un azzurro chiaro */
+  font-weight: 900;
+}
+
 #notePopup textarea {
   width: 100%;
   font-size: 16px;

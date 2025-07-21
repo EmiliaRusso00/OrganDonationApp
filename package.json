@@ -4,7 +4,7 @@
   "description": "App per gestire un Gantt Chart per trapianti",
   "main": "backend/main.js",
   "author": "Emilia Russo",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder"
@@ -37,7 +37,9 @@
       {
         "from": "backend/data/",
         "to": "data",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
@@ -50,7 +52,7 @@
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "Gantt Trapianto"
+      "shortcutName": "Gestione Trapianto Organi"
     }
   }
 }

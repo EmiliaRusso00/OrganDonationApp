@@ -9,7 +9,6 @@ function initDatabase() {
   const dbPath = path.join(app.getPath('userData'), 'tasks.db');
   db = new Database(dbPath);
 
-  // 1) Creo la tabella se non esiste
   db.exec(`
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY,
@@ -22,15 +21,12 @@ function initDatabase() {
     )
   `);
 
-  // 2) Svuoto sempre la tabella
   db.exec('DELETE FROM tasks');
 
-  // 3) Carico il JSON e reinserisco
   const dataPath = app.isPackaged
       ? path.join(process.resourcesPath, 'data', 'data.json') // da asar
       : path.join(__dirname, 'data', 'data.json');            // da sorgente
 
-    // 4) Controllo che esista prima di leggerlo
     if (!fs.existsSync(dataPath)) {
       console.error('File data.json non trovato in:', dataPath);
       return;
@@ -101,7 +97,7 @@ ipcMain.handle('get-tasks', () => {
 
 
 ipcMain.handle('update-task', (e, { id, status, note }) => {
-  console.log('🛠️ [MAIN] update-task invocato con:', {
+  console.log('[MAIN] update-task invocato con:', {
     id,                   // il valore di id
     typeOfId: typeof id,  // il tipo di id
     status,
