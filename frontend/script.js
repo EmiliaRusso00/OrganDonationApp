@@ -411,13 +411,12 @@ function renderGantt(startTime) {
     }
 
 
-    window.api.getTasks()
+window.api.getTasks()
   .then(data => {
     data.forEach(task => {
       task.id = parseInt(task.id, 10);
       task.dependencies = task.dependencies.map(dep => parseInt(dep, 10));
     });
-
     scheduleTasks(data);
     data.forEach((d, i) => d.y = 140 + i * (taskHeight + taskPadding));
 
@@ -436,7 +435,6 @@ function renderGantt(startTime) {
       .append('g')
       .each(function(d) {
         const g = d3.select(this);
-
         g.append('rect')
           .attr('class', 'task')
           .attr('x', x(d.start) + 220)
@@ -445,36 +443,17 @@ function renderGantt(startTime) {
           .attr('height', taskHeight)
           .attr('fill', statusColors[d.status] || '#ccc')
           .attr('stroke', '#000')
-          .on('click', () => {
-            openNotePopup(d);
-          })
+          .on('click', () => openNotePopup(d))
           .on('mouseover', (event) => {
             const deps = d.dependencies.length
               ? d.dependencies.map(id => idToName.get(id)).join(', ')
               : 'Nessuna';
-
-            let statusText = 'Non Iniziato';
-            if (d.status === 'terminato') statusText = 'Terminato o non Richiesto';
-            else if (d.status === 'richiesto') statusText = 'Richiesto';
-            else if (d.status === 'iniziato') statusText = 'Iniziato';
-
-            let tooltipHtml = `
-              <strong><span class="task-name">${d.name}</span></strong><br/>
-              <strong>Durata:</strong> ${d.duration} min<br/>
-            `;
-
-            if (d.description && d.description.trim() !== '') {
-              tooltipHtml += `<strong>Descrizione:</strong> ${d.description}<br/>`;
-            }
-
-            tooltipHtml += `
-              <strong>Dipendenze:</strong> ${deps}<br/>
-              <strong>Stato:</strong> ${statusText}<br/>
-              <strong>Nota:</strong> ${d.note || 'Nessuna'}
-            `;
-
+            let statusText = { non_iniziato: 'Non Iniziato', richiesto: 'Richiesto', iniziato: 'Iniziato', terminato: 'Terminato o non Richiesto' }[d.status];
+            let html = `<strong>${d.name}</strong><br/><strong>Durata:</strong> ${d.duration} min<br/>`;
+            if (d.description) html += `<strong>Descrizione:</strong> ${d.description}<br/>`;
+            html += `<strong>Dipendenze:</strong> ${deps}<br/><strong>Stato:</strong> ${statusText}<br/><strong>Nota:</strong> ${d.note || 'Nessuna'}`;
             tooltip.style('opacity', 1)
-              .html(tooltipHtml)
+              .html(html)
               .style('left', (event.pageX + 10) + 'px')
               .style('top', (event.pageY + 10) + 'px');
           })
@@ -482,9 +461,7 @@ function renderGantt(startTime) {
             tooltip.style('left', (event.pageX + 10) + 'px')
               .style('top', (event.pageY + 10) + 'px');
           })
-          .on('mouseout', () => {
-            tooltip.style('opacity', 0);
-          });
+          .on('mouseout', () => tooltip.style('opacity', 0));
 
         const forwardArrow = g.append('text')
           .attr('x', x(d.end) + 235)
@@ -523,7 +500,7 @@ function renderGantt(startTime) {
             } else if (d.status === 'iniziato') {
               d.status = 'terminato';
               g.select('rect').attr('fill', statusColors[d.status]);
-              forwardArrow.attr('fill','gray');
+              forwardArrow.attr('fill', 'gray');
               updateTaskStatus(d.id, 'terminato');
             }
           });
@@ -533,7 +510,6 @@ function renderGantt(startTime) {
           .attr('y', d.y + taskHeight / 2 + 40)
           .text('\u25C0')
           .attr('font-size', '27px')
-          .attr('fill', '#000')
           .style('cursor', 'pointer')
           .on('click', function() {
             const dependentTasks = data.filter(t => t.dependencies && t.dependencies.includes(d.id));
@@ -553,7 +529,7 @@ function renderGantt(startTime) {
             } else if (d.status === 'richiesto') {
               d.status = 'non_iniziato';
             } else {
-              showModal("Il task è già nello stato iniziale.");
+              showModal('Il task è già nello stato iniziale.');
               return;
             }
 
@@ -564,14 +540,12 @@ function renderGantt(startTime) {
 
     const minY = d3.min(data, d => d.y + taskHeight / 2 + 20);
     const maxY = d3.max(data, d => d.y + taskHeight / 2 + 50);
-    const labelBackgroundWidth = 330;
-
-    const labelBackground = svg.append('rect')
+    svg.append('rect')
       .attr('class', 'label-background')
       .attr('x', 0)
       .attr('y', minY - 20)
+      .attr('width', 330)
       .attr('height', maxY - minY + 40)
-      .attr('width', labelBackgroundWidth)
       .attr('fill', 'white')
       .attr('rx', 10)
       .attr('opacity', 0.8);
@@ -581,16 +555,16 @@ function renderGantt(startTime) {
       .enter()
       .append('text')
       .classed('label', true)
-      .attr('font-weight', 'bold')
       .attr('x', 10)
       .attr('y', d => d.y + taskHeight / 2 + 30)
-      .text(d => d.name)
-      .attr('font-size', '18px');
+      .attr('font-weight', 'bold')
+      .attr('font-size', '18px')
+      .text(d => d.name);
 
     window.addEventListener('scroll', () => {
       const scrollX = window.scrollX || window.pageXOffset;
       labels.attr('x', 10 + scrollX);
-      labelBackground.attr('x', scrollX);
+      svg.select('.label-background').attr('x', scrollX);
     });
 
     function updateTaskStatus(id, status) {
