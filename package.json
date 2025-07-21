@@ -18,8 +18,8 @@
     "@electron/rebuild": "^4.0.1"
   },
   "build": {
-    "appId": "com.tuonome.trapianto",
-    "productName": "GanttTrapiantoOrgani",
+    "appId": "com.emilia.trapianto",
+    "productName": "GestioneTrapiantiOrgani",
     "directories": {
       "buildResources": "assets",
       "output": "dist"
@@ -37,9 +37,7 @@
       {
         "from": "backend/data/",
         "to": "data",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       }
     ],
     "win": {
