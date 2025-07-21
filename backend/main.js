@@ -96,18 +96,26 @@ app.on('window-all-closed', () => {
 ipcMain.handle('get-tasks', () => {
   const stmt = db.prepare('SELECT * FROM tasks ORDER BY CAST(id AS INTEGER)');
   const tasks = stmt.all().map(t => ({ ...t, dependencies: JSON.parse(t.dependencies) }));
-  console.log("📦 Tasks caricati:", tasks);
   return tasks;
 });
 
 
 ipcMain.handle('update-task', (e, { id, status, note }) => {
+  console.log('🛠️ [MAIN] update-task invocato con:', {
+    id,                   // il valore di id
+    typeOfId: typeof id,  // il tipo di id
+    status,
+    note
+  });
+
   const stmt = db.prepare(`
     UPDATE tasks
     SET status = COALESCE(?, status),
         note   = COALESCE(?, note)
-    WHERE id = ?
+    WHERE CAST(id AS INTEGER) = ?
   `);
+
   const info = stmt.run(status, note, id);
+  console.log('[MAIN] SQLite info.changes =', info.changes);
   return { changes: info.changes };
 });

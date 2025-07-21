@@ -32,31 +32,47 @@ function closeNotePopup() {
   document.getElementById('notePopup').style.display = 'none';
   currentTaskForNote = null;
 }
-
 document.getElementById('saveNoteBtn').addEventListener('click', () => {
-  const noteText = document.getElementById('noteInput').value;
+  const noteText = document.getElementById('noteInput').value.trim();
   if (!currentTaskForNote) return;
 
-  window.api.updateTask({ id: currentTaskForNote.id, note: noteText })
-    .then(result => {
-      if (result.changes === 0) throw new Error('Nessuna modifica applicata');
-      console.log("Nota aggiornata:", result);
-      closeNotePopup();
+  // 🚀 Log prima di invocare l’IPC
+  console.log('[RENDERER] Chiamo updateTask con:', {
+    id: currentTaskForNote.id,
+    note: noteText
+  });
 
-      // Rigenera il Gantt con i dati aggiornati
-      const container = document.getElementById('container');
-      if (container) container.innerHTML = "";
+  window.api.updateTask({
+    id: currentTaskForNote.id,
+    status: null,
+    note: noteText
+  })
+  .then(result => {
+    // 🚀 Log all’ingresso nel .then
+    console.log('[RENDERER] updateTask resolved con:', result);
 
-      const savedTime = localStorage.getItem("lastTime");
+    if (result.changes === 0) {
+      console.warn('[RENDERER] result.changes === 0, lancio errore');
+      throw new Error('Nessuna modifica applicata');
+    }
 
-      const savedOperator = localStorage.getItem("lastOperator") || 'Operatore';
-      generateGanttFromInput(savedTime, savedOperator);
+    console.log("Nota aggiornata con successo:", result);
+    closeNotePopup();
 
-    })
-    .catch(err => {
-      console.error('Errore nel salvataggio nota:', err);
-      showModal("Errore durante il salvataggio della nota. Controlla la console.");
-    });
+    // Rigenera il Gantt
+    const container = document.getElementById('container');
+    if (container) container.innerHTML = "";
+
+    const savedTime     = localStorage.getItem("lastTime");
+    const savedOperator = localStorage.getItem("lastOperator") || '';
+    generateGanttFromInput(savedTime, savedOperator);
+  })
+  .catch(err => {
+    // 🚀 Log completo dell’errore catturato
+    console.error('[RENDERER] Errore nel salvataggio nota:', err);
+
+    showModal("Errore durante il salvataggio della nota. Controlla la console.");
+  });
 });
 
 
@@ -135,7 +151,7 @@ function renderGantt(startTime) {
 
     const svg = d3.select('#container')
         .append('svg')
-        .attr('width', svgWidth + 200)
+        .attr('width', svgWidth + 220)
         .attr('height', chartHeight + 1300)
         .style('overflow','visible');
     // Aggiungi immagine di sfondo
@@ -230,9 +246,9 @@ function renderGantt(startTime) {
         .lower();
 
     svg.append('line')
-        .attr('x1', x(dayEnd)+200)
+        .attr('x1', x(dayEnd)+220)
         .attr('y1', 10)
-        .attr('x2', x(dayEnd)+200)
+        .attr('x2', x(dayEnd)+220)
         .attr('y2', 10 + rectHeight)
         .attr('stroke', '#fff')
         .attr('stroke-width', 2);
@@ -252,7 +268,7 @@ function renderGantt(startTime) {
     const formatIt = localeIt.format('%B %d');
 
     svg.append('text')
-        .attr('x', ((x(dayStart)+200) + (x(dayEnd)+200)) / 2)
+        .attr('x', ((x(dayStart)+220) + (x(dayEnd)+220)) / 2)
         .attr('y', 60)
         .attr('text-anchor', 'middle')
         .attr('fill', '#fff')
@@ -261,7 +277,7 @@ function renderGantt(startTime) {
         .text(formatIt(dayStart));
 
     svg.append('text')
-        .attr('x', ((x(dayEnd)+200) + (x(endTime)+200)) / 2)
+        .attr('x', ((x(dayEnd)+220) + (x(endTime)+220)) / 2)
         .attr('y', 60)
         .attr('text-anchor', 'middle')
         .attr('fill', '#fff')
@@ -396,214 +412,192 @@ function renderGantt(startTime) {
 
 
     window.api.getTasks()
-      .then(data => {
-        data.forEach(task => {
-            task.id = parseInt(task.id, 10);
-            task.dependencies = task.dependencies.map(dep => parseInt(dep, 10));
-        });
-        scheduleTasks(data);
-        data.forEach((d, i) => d.y = 140 + i * (taskHeight + taskPadding));
+  .then(data => {
+    data.forEach(task => {
+      task.id = parseInt(task.id, 10);
+      task.dependencies = task.dependencies.map(dep => parseInt(dep, 10));
+    });
 
-        const statusColors = {
-            non_iniziato: 'rgba(75, 73, 227, 1)',
-            richiesto: "rgb(233, 238, 160)",
-            iniziato: 'rgb(255, 197, 72)',
-            terminato: 'rgb(160, 248, 175)'
-        };
+    scheduleTasks(data);
+    data.forEach((d, i) => d.y = 140 + i * (taskHeight + taskPadding));
 
-        // Creo una mappa id -> nome per le dipendenze
-        const idToName = new Map(data.map(t => [t.id, t.name]));
+    const statusColors = {
+      non_iniziato: 'rgba(75, 73, 227, 1)',
+      richiesto: 'rgb(233, 238, 160)',
+      iniziato: 'rgb(255, 197, 72)',
+      terminato: 'rgb(160, 248, 175)'
+    };
 
-        svg.selectAll('.task')
-            .data(data)
-            .enter()
-            .append('g')
-            .each(function(d) {
-                const g = d3.select(this);
+    const idToName = new Map(data.map(t => [t.id, t.name]));
 
-                g.append('rect')
-                    .attr('class', 'task')
-                    .attr('x', x(d.start) + 220)
-                    .attr('y', d.y + 30)
-                    .attr('width', x(d.end) - x(d.start))
-                    .attr('height', taskHeight)
-                    .attr('fill', statusColors[d.status] || '#ccc')
-                    .attr('stroke', '#000')
-                    .on('click', () => {
-                        openNotePopup(d);
-                    })
-                    .on('mouseover', (event, d) => {
-                        const deps = (d.dependencies && d.dependencies.length > 0)
-                            ? d.dependencies.map(id => idToName.get(id)).join(', ')
-                            : 'Nessuna';
+    const groups = svg.selectAll('.task')
+      .data(data)
+      .enter()
+      .append('g')
+      .each(function(d) {
+        const g = d3.select(this);
 
-                        let statusText = 'Non Iniziato';
-                        if (d.status === 'terminato') statusText = 'Terminato o non Richiesto';
-                        else if (d.status === 'richiesto') statusText = 'Richiesto';
-                        else if (d.status === 'iniziato') statusText = 'Iniziato';
+        g.append('rect')
+          .attr('class', 'task')
+          .attr('x', x(d.start) + 220)
+          .attr('y', d.y + 30)
+          .attr('width', x(d.end) - x(d.start))
+          .attr('height', taskHeight)
+          .attr('fill', statusColors[d.status] || '#ccc')
+          .attr('stroke', '#000')
+          .on('click', () => {
+            openNotePopup(d);
+          })
+          .on('mouseover', (event) => {
+            const deps = d.dependencies.length
+              ? d.dependencies.map(id => idToName.get(id)).join(', ')
+              : 'Nessuna';
 
-                        // Costruzione dinamica del contenuto del tooltip
-                        let tooltipHtml = `
-                            <strong><span class="task-name">${d.name}</span></strong><br/>
-                            <strong>Durata:</strong> ${d.duration} min<br/>
-                        `;
+            let statusText = 'Non Iniziato';
+            if (d.status === 'terminato') statusText = 'Terminato o non Richiesto';
+            else if (d.status === 'richiesto') statusText = 'Richiesto';
+            else if (d.status === 'iniziato') statusText = 'Iniziato';
 
-                        if (d.description && d.description.trim() !== '') {
-                            tooltipHtml += `<strong>Descrizione:</strong> ${d.description}<br/>`;
-                        }
+            let tooltipHtml = `
+              <strong><span class="task-name">${d.name}</span></strong><br/>
+              <strong>Durata:</strong> ${d.duration} min<br/>
+            `;
 
-                        tooltipHtml += `
-                            <strong>Dipendenze:</strong> ${deps}<br/>
-                            <strong>Stato:</strong> ${statusText}<br/>
-                            <strong>Nota:</strong> ${d.note || 'Nessuna'}
-                        `;
-
-                        tooltip.style('opacity', 1)
-                            .html(tooltipHtml)
-                            .style('left', (event.pageX + 10) + 'px')
-                            .style('top', (event.pageY + 10) + 'px');
-                    })
-                    .on('mousemove', (event) => {
-                        tooltip.style('left', (event.pageX + 10) + 'px')
-                            .style('top', (event.pageY + 10) + 'px');
-                    })
-                    .on('mouseout', () => {
-                        tooltip.style('opacity', 0);
-                    });
-
-                    // Freccia avanti
-                    const forwardArrow = g.append('text')
-                        .attr('x', x(d.end) + 235)
-                        .attr('y', d.y + taskHeight / 2 + 40)
-                        .text('\u25B6')
-                        .attr('font-size', '27px')
-                        .attr('fill', d.status === 'terminato' ? 'gray' : '#000')
-                        .style('cursor', 'pointer')
-                        .on('click', function() {
-                            function dependenciesCompleted(task) {
-                                if (!task.dependencies || task.dependencies.length === 0) return true;
-                                return task.dependencies.every(depId => {
-                                    const depTask = data.find(t => t.id === depId);
-                                    return depTask && depTask.status === 'terminato';
-                                });
-                            }
-
-                            if (d.status === 'non_iniziato') {
-                                if (dependenciesCompleted(d)) {
-                                    d.status = 'richiesto';
-                                    g.select('rect').attr('fill', statusColors[d.status]);
-                                    updateTaskStatus(d.id, 'richiesto');
-                                } else {
-                                    const incompleteDeps = d.dependencies
-                                        .map(depId => data.find(t => t.id === depId))
-                                        .filter(depTask => depTask && depTask.status !== 'terminato');
-                                    const names = incompleteDeps.map(t => t.name).join(', ');
-                                    showModal(`Non puoi avviare questo task finché non sono completati i seguenti task: ${names}`);
-                                }
-                            } else if (d.status === 'richiesto') {
-                                if (dependenciesCompleted(d)) {
-                                    d.status = 'iniziato';
-                                    g.select('rect').attr('fill', statusColors[d.status]);
-                                    updateTaskStatus(d.id, 'iniziato');
-                                }
-                            } else if (d.status === 'iniziato') {
-                                d.status = 'terminato';
-                                g.select('rect').attr('fill', statusColors[d.status]);
-                                forwardArrow.attr('fill','gray');
-                                updateTaskStatus(d.id, 'terminato');
-                            }
-                        });
-                    // Freccia indietro
-                    g.append('text')
-                        .attr('x', x(d.start) + 180)
-                        .attr('y', d.y + taskHeight / 2 + 40)
-                        .text('\u25C0')
-                        .attr('font-size', '27px')
-                        .attr('fill', '#000')
-                        .style('cursor', 'pointer')
-                        .on('click', function() {
-                            const dependentTasks = data.filter(t => t.dependencies && t.dependencies.includes(d.id));
-                            const anyDependentActive = dependentTasks.some(t => t.status !== 'non_iniziato');
-
-                            if (anyDependentActive) {
-                                const names = dependentTasks.map(t => t.name).join(', ');
-                                showModal(`Non puoi tornare indietro con questo task perché i seguenti task dipendenti sono già stati attivati: ${names}`);
-                                return;
-                            }
-
-                            if (d.status === 'terminato') {
-                                d.status = 'iniziato';
-                                forwardArrow.attr('fill', '#000');
-                            } else if (d.status === 'iniziato') {
-                                d.status = 'richiesto';
-                            } else if (d.status === 'richiesto') {
-                                d.status = 'non_iniziato';
-                            } else {
-                                showModal("Il task è già nello stato iniziale.");
-                                return;
-                            }
-
-                            g.select('rect').attr('fill', statusColors[d.status]);
-                            updateTaskStatus(d.id, d.status);
-                        });
-
-
-                });
-
-            // 1. Calcola altezza massima delle etichette (per coprirle tutte)
-            const minY = d3.min(data, d => d.y + taskHeight / 2 + 20);
-            const maxY = d3.max(data, d => d.y + taskHeight / 2 + 50);
-            const labelBackgroundWidth = 330;
-            // 2. Aggiungi un rettangolo di background sopra le label
-            const labelBackground = svg.append('rect')
-                .attr('class', 'label-background')
-                .attr('x', 0)
-                .attr('y', minY - 20) // un po' sopra le etichette
-                .attr('height', maxY - minY + 40) // un po' sotto le etichette
-                .attr('width', labelBackgroundWidth)
-                .attr('fill', 'white')
-                .attr('rx', 10) // o altro colore per "nascondere"
-                .attr('opacity', 0.8);
-
-            // 3. Crea le label come prima
-            const labels = svg.selectAll('.label')
-                .data(data)
-                .enter()
-                .append('text')
-                .classed('label', true)
-                .attr('font-weight', 'bold')
-                .attr('x', 10)
-                .attr('y', d => d.y + taskHeight / 2 + 30)
-                .text(d => d.name)
-                .attr('font-size', '18px');
-
-            // 4. Aggiorna tutto allo scroll
-            window.addEventListener('scroll', () => {
-                const scrollX = window.scrollX || window.pageXOffset;
-
-                // Sposta tutte le label
-                labels.attr('x', 10 + scrollX);
-
-                // Sposta il rettangolo di background per coprire tutta la sezione label
-                labelBackground.attr('x', scrollX);
-            });
-
-
-        });
-
-        // Rendering dei tasks e interazioni
-        const groups = svg.selectAll('.task').data(data).enter().append('g');
-        groups.each(function(d) {
-            const g = d3.select(this);
-            // ... (setup rettangoli, tooltip, frecce) ...
-            // Aggiorna stato via IPC
-            function updateTaskStatus(id, status) {
-                window.api.updateTask({ id, status })
-                    .then(res => {
-                    if (res.changes === 0) showModal('Errore nell\'aggiornamento dello stato del task.');
-                    });
+            if (d.description && d.description.trim() !== '') {
+              tooltipHtml += `<strong>Descrizione:</strong> ${d.description}<br/>`;
             }
+
+            tooltipHtml += `
+              <strong>Dipendenze:</strong> ${deps}<br/>
+              <strong>Stato:</strong> ${statusText}<br/>
+              <strong>Nota:</strong> ${d.note || 'Nessuna'}
+            `;
+
+            tooltip.style('opacity', 1)
+              .html(tooltipHtml)
+              .style('left', (event.pageX + 10) + 'px')
+              .style('top', (event.pageY + 10) + 'px');
+          })
+          .on('mousemove', (event) => {
+            tooltip.style('left', (event.pageX + 10) + 'px')
+              .style('top', (event.pageY + 10) + 'px');
+          })
+          .on('mouseout', () => {
+            tooltip.style('opacity', 0);
+          });
+
+        const forwardArrow = g.append('text')
+          .attr('x', x(d.end) + 235)
+          .attr('y', d.y + taskHeight / 2 + 40)
+          .text('\u25B6')
+          .attr('font-size', '27px')
+          .attr('fill', d.status === 'terminato' ? 'gray' : '#000')
+          .style('cursor', 'pointer')
+          .on('click', function() {
+            function dependenciesCompleted(task) {
+              if (!task.dependencies || task.dependencies.length === 0) return true;
+              return task.dependencies.every(depId => {
+                const depTask = data.find(t => t.id === depId);
+                return depTask && depTask.status === 'terminato';
+              });
+            }
+
+            if (d.status === 'non_iniziato') {
+              if (dependenciesCompleted(d)) {
+                d.status = 'richiesto';
+                g.select('rect').attr('fill', statusColors[d.status]);
+                updateTaskStatus(d.id, 'richiesto');
+              } else {
+                const incompleteDeps = d.dependencies
+                  .map(depId => data.find(t => t.id === depId))
+                  .filter(depTask => depTask && depTask.status !== 'terminato');
+                const names = incompleteDeps.map(t => t.name).join(', ');
+                showModal(`Non puoi avviare questo task finché non sono completati i seguenti task: ${names}`);
+              }
+            } else if (d.status === 'richiesto') {
+              if (dependenciesCompleted(d)) {
+                d.status = 'iniziato';
+                g.select('rect').attr('fill', statusColors[d.status]);
+                updateTaskStatus(d.id, 'iniziato');
+              }
+            } else if (d.status === 'iniziato') {
+              d.status = 'terminato';
+              g.select('rect').attr('fill', statusColors[d.status]);
+              forwardArrow.attr('fill','gray');
+              updateTaskStatus(d.id, 'terminato');
+            }
+          });
+
+        g.append('text')
+          .attr('x', x(d.start) + 180)
+          .attr('y', d.y + taskHeight / 2 + 40)
+          .text('\u25C0')
+          .attr('font-size', '27px')
+          .attr('fill', '#000')
+          .style('cursor', 'pointer')
+          .on('click', function() {
+            const dependentTasks = data.filter(t => t.dependencies && t.dependencies.includes(d.id));
+            const anyDependentActive = dependentTasks.some(t => t.status !== 'non_iniziato');
+
+            if (anyDependentActive) {
+              const names = dependentTasks.map(t => t.name).join(', ');
+              showModal(`Non puoi tornare indietro con questo task perché i seguenti task dipendenti sono già stati attivati: ${names}`);
+              return;
+            }
+
+            if (d.status === 'terminato') {
+              d.status = 'iniziato';
+              forwardArrow.attr('fill', '#000');
+            } else if (d.status === 'iniziato') {
+              d.status = 'richiesto';
+            } else if (d.status === 'richiesto') {
+              d.status = 'non_iniziato';
+            } else {
+              showModal("Il task è già nello stato iniziale.");
+              return;
+            }
+
+            g.select('rect').attr('fill', statusColors[d.status]);
+            updateTaskStatus(d.id, d.status);
+          });
+      });
+
+    const minY = d3.min(data, d => d.y + taskHeight / 2 + 20);
+    const maxY = d3.max(data, d => d.y + taskHeight / 2 + 50);
+    const labelBackgroundWidth = 330;
+
+    const labelBackground = svg.append('rect')
+      .attr('class', 'label-background')
+      .attr('x', 0)
+      .attr('y', minY - 20)
+      .attr('height', maxY - minY + 40)
+      .attr('width', labelBackgroundWidth)
+      .attr('fill', 'white')
+      .attr('rx', 10)
+      .attr('opacity', 0.8);
+
+    const labels = svg.selectAll('.label')
+      .data(data)
+      .enter()
+      .append('text')
+      .classed('label', true)
+      .attr('font-weight', 'bold')
+      .attr('x', 10)
+      .attr('y', d => d.y + taskHeight / 2 + 30)
+      .text(d => d.name)
+      .attr('font-size', '18px');
+
+    window.addEventListener('scroll', () => {
+      const scrollX = window.scrollX || window.pageXOffset;
+      labels.attr('x', 10 + scrollX);
+      labelBackground.attr('x', scrollX);
+    });
+
+    function updateTaskStatus(id, status) {
+      window.api.updateTask({ id, status })
+        .then(res => {
+          if (res.changes === 0) showModal("Errore nell'aggiornamento dello stato del task.");
         });
-
+    }
+  });
 }
-
