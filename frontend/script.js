@@ -427,9 +427,9 @@ window.api.getTasks()
             ? d.dependencies.map(id => idToName.get(id)).join(', ')
             : 'Nessuna';
            let statusText = { non_iniziato: 'Non Iniziato', richiesto: 'Richiesto', iniziato: 'Iniziato', terminato: 'Terminato o non Richiesto' }[d.status];
-           let html = `<div style="text-align: center;"><strong class="task-name">${d.name}</strong></div><strong>Durata:</strong> ${d.duration} min<br/>`;
-           if (d.description) html += `<strong>Descrizione:</strong> ${d.description}<br/>`;
-           html += `<strong>Dipendenze:</strong> ${deps}<br/><strong>Stato:</strong> ${statusText}<br/><strong class="task-note">Nota:</strong> ${d.note || 'Nessuna'}`;
+           let html = `<div style="text-align: center;"><strong class="task-name">${d.name}</strong></div><strong class="task-d">Durata:</strong> ${d.duration} min<br/>`;
+           if (d.description) html += `<strong class="task-d">Descrizione:</strong> ${d.description}<br/>`;
+           html += `<strong class="task-d">Dipendenze:</strong> ${deps}<br/><strong class="task-d">Stato:</strong> ${statusText}<br/><strong class="task-note">Nota:</strong> ${d.note || 'Nessuna'}`;
            tooltip.style('opacity', 1)
             .html(html)
             .style('left', (event.pageX + 10) + 'px')

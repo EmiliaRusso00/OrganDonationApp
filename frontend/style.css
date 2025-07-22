@@ -123,7 +123,7 @@ svg {
 
 /* colore speciale solo per il nome del task */
 #tooltip .task-name {
-  color: #4FC3F7;  /* un azzurro chiaro */
+  color: #ffffff;  /* un azzurro chiaro */
   font-weight: 900;
 }
 
@@ -131,6 +131,12 @@ svg {
   color: #f96f9d;  /* un azzurro chiaro */
   font-weight: 900;
 }
+
+#tooltip .task-d {
+  color: #b7e8ff;  /* un azzurro chiaro */
+  font-weight: 900;
+}
+
 
 #notePopup textarea {
   width: 100%;
