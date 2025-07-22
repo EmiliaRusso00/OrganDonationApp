@@ -1,7 +1,7 @@
 {
   "name": "mia-electron-app",
   "version": "1.0.0",
-  "description": "App per gestire un Gantt Chart per trapianti",
+  "description": "Gantt Chart per la gestione dei trapianti degli organi per l'ospedale San Camillo",
   "main": "backend/main.js",
   "author": "Emilia Russo",
   "license": "Apache-2.0",
@@ -18,7 +18,7 @@
     "@electron/rebuild": "^4.0.1"
   },
   "build": {
-    "appId": "com.emilia.trapianto",
+    "appId": "it.sancamillo.gestionetrapianti",
     "productName": "GestioneTrapiantiOrgani",
     "directories": {
       "buildResources": "assets",
