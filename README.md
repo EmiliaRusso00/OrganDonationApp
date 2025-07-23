@@ -9,13 +9,19 @@
 - **SQLite (better-sqlite3)** – Per la gestione del database locale
 - **JavaScript, HTML, CSS** – Per l'interfaccia grafica utente
 
-## 📦 Avvio dell'applicazione
+Prima di far partire l'applicazione assicurarsi di avere installato NOde.js
 
-Dopo aver eseguito il comando:
+## Fase di sviluppo
+Per far girare l'applicazione all'interno della cartella principale eseguire il seguente comando:
 
 ```bash
-npm run dist
+npm start
 ```
+
+## 📦 Avvio dell'applicazione
+
+All'interno della cartella dist si trova il file: "GestioneTrapiantiOrgani Setup 1.0.0.exe"
+Effettuare doppio click per lanciare l'applicazione.
 
 verrà generata una cartella `dist/` contenente un file `.exe`.  
 È sufficiente eseguire quel file `.exe` per installare o avviare l'applicazione sul proprio computer Windows.
