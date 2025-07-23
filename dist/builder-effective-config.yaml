@@ -1,8 +1,8 @@
 directories:
   output: dist
   buildResources: assets
-appId: com.tuonome.trapianto
-productName: GanttTrapiantoOrgani
+appId: it.sancamillo.gestionetrapianti
+productName: GestioneTrapiantiOrgani
 files:
   - filter:
       - backend/**/*
@@ -24,5 +24,5 @@ nsis:
   allowElevation: true
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
-  shortcutName: Gantt Trapianto
+  shortcutName: Gestione Trapianto Organi
 electronVersion: 37.2.3
