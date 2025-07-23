@@ -11,8 +11,8 @@
 
 Prima di far partire l'applicazione assicurarsi di avere installato NOde.js
 
-## Fase di sviluppo
-Per far girare l'applicazione all'interno della cartella principale eseguire il seguente comando:
+## 🛠️ Fase di sviluppo
+Per avviare l’app durante lo sviluppo, aprire il terminale nella cartella principale del progetto ed eseguire:
 
 ```bash
 npm start
@@ -23,8 +23,7 @@ npm start
 All'interno della cartella dist si trova il file: "GestioneTrapiantiOrgani Setup 1.0.0.exe"
 Effettuare doppio click per lanciare l'applicazione.
 
-verrà generata una cartella `dist/` contenente un file `.exe`.  
-È sufficiente eseguire quel file `.exe` per installare o avviare l'applicazione sul proprio computer Windows.
+La cartella dist/ viene generata automaticamente durante il processo di build e contiene il file .exe necessario per l’installazione.
 
 ## 📝 Licenza
 
