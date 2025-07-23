@@ -67,7 +67,39 @@ document.getElementById('saveNoteBtn').addEventListener('click', () => {
   });
 });
 
+const eliminaBtn = document.getElementById('eliminaBtn');
+const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+const confirmDeleteYes = document.getElementById('confirmDeleteYes');
+const confirmDeleteNo = document.getElementById('confirmDeleteNo');
 
+eliminaBtn.addEventListener('click', () => {
+  // Mostra popup di conferma
+  confirmDeleteModal.classList.remove('hidden');
+});
+
+confirmDeleteNo.addEventListener('click', () => {
+  // Nascondi popup senza fare nulla
+  confirmDeleteModal.classList.add('hidden');
+});
+
+confirmDeleteYes.addEventListener('click', async () => {
+  // Chiudi popup
+  confirmDeleteModal.classList.add('hidden');
+  
+  try {
+    // Chiamata IPC al main per resettare il DB (elimina gantt)
+    const result = await window.api.resetDatabase();
+
+    if (result.success) {
+      location.reload(); // ricarica pagina per aggiornare UI
+    } else {
+      alert(`Errore nel reset del DB: ${result.error || 'Sconosciuto'}`);
+    }
+  } catch (err) {
+    alert('Errore durante la comunicazione con l\'applicazione.');
+    console.error(err);
+  }
+});
 
 // Click su "Conferma": salva orario e operatore e genera Gantt
 document.getElementById('popup-generate').addEventListener('click', () => {
@@ -330,6 +362,7 @@ function renderGantt(startTime) {
       .attr('font-size', '20px')
       .text('18h - COMPLETAMENTO IDEALE DI TUTTE LE ATTIVITÀ ');
 
+    //Aggiornamento orario tra startTime e endTime, evita che la linea vada fuori dal Gantt
     function updateCurrentTime() {
       const now = new Date();
       const clamped = Math.max(startTime.getTime(), Math.min(now.getTime(), endTime.getTime()));
@@ -353,12 +386,16 @@ function renderGantt(startTime) {
     setInterval(updateCurrentTime, 1000);
 
     function scheduleTasks(tasks) {
+      //Crea dizionario chiave id e valore intero task. 
       const taskMap = new Map(tasks.map(t => [t.id, t]));
       const scheduled = new Map();
 
+    //Calcola l'ora di inizio effettivo di ogni tasks
     function computeStart(task) {
+      //evita doppio calcolo orario
       if (scheduled.has(task.id)) return scheduled.get(task.id);
 
+      //Caso in cui si ha un orario offset prima di far partire il tasks, nota andrebbe rintegrato l'attributo nel db
       if (task.startOffsetHours !== undefined && task.startOffsetHours !== null) {
 
         const start = new Date(startTime.getTime() + task.startOffsetHours * 60 * 60 * 1000);
@@ -371,6 +408,7 @@ function renderGantt(startTime) {
           return new Date(startTime);
       }
 
+      //inizio del gantt, se ci sono dipendenze il tempo viene aggiornato e aumentato
       let maxEnd = new Date(startTime);
         for (let depId of task.dependencies) {
              const depTask = taskMap.get(depId);
@@ -458,9 +496,11 @@ window.api.getTasks()
             }
 
             if (d.status === 'non_iniziato') {
+              //solo se tutte le dipendenze sono terminate allora passa a richiesto
               if (dependenciesCompleted(d)) {
                 d.status = 'richiesto';
                 g.select('rect').attr('fill', statusColors[d.status]);
+                //salvataggio nel backend
                 updateTaskStatus(d.id, 'richiesto');
               } else {
                 const incompleteDeps = d.dependencies
@@ -516,6 +556,7 @@ window.api.getTasks()
           });
       });
 
+    //scorrimento tasks.
     const minY = d3.min(data, d => d.y + taskHeight / 2 + 20);
     const maxY = d3.max(data, d => d.y + taskHeight / 2 + 50);
     svg.append('rect')
@@ -540,6 +581,7 @@ window.api.getTasks()
       .text(d => d.name);
 
     window.addEventListener('scroll', () => {
+      //numero pixel scrollati in orizzontale, usato per spostarcisi. per allineamento.
       const scrollX = window.scrollX || window.pageXOffset;
       labels.attr('x', 10 + scrollX);
       svg.select('.label-background').attr('x', scrollX);
